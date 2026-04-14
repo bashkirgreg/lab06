@@ -18,8 +18,8 @@
 
 ## Выполнение домашней части
 
-1)Склонировал файлы из прошлой работы в эту через команду 'git clone https://github.com/bashkirgreg/lab03_TestLab03 projects/lab04', а потом запушил их на удалённый сервер;
+1)Склонировал файлы из прошлой работы в эту через команду `git clone https://github.com/bashkirgreg/lab03_TestLab03 projects/lab04`, а потом запушил их на удалённый сервер;
 
-2)Создал '.github/workflows/ci.yml', куда прописал необходимые строки кода;
+2)Создал `.github/workflows/ci.yml`, куда прописал необходимые строки кода;
 
-3)Сделал так, чтобы были такие комбинации: 'Linux + gcc', 'Linux + clang', 'Windows + clang'.
+3)Сделал так, чтобы были такие комбинации: `Linux + gcc`, `Linux + clang`, `Windows + clang`.
