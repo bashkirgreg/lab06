@@ -67,4 +67,3 @@ jobs:
           else
             echo "1 5 4" | ./build/solver/solver
           fi
-# Final
