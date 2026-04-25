@@ -90,6 +90,17 @@ if(BUILD_TESTS)
 endif()
 EOF
 ```
+> Если что, начало этого `CMakeLists.txt` такое же, как и в четвёртой лабораторной работе:
+>```sh
+>cmake_minimum_required(VERSION 3.10)
+>project(TestLab03)
+>set(CMAKE_CXX_STANDARD 11)
+>set(CMAKE_CXX_STANDARD_REQUIRED ON)
+>add_subdirectory(formatter_lib)
+>add_subdirectory(formatter_ex_lib)
+>add_subdirectory(hello_world)
+>add_subdirectory(solver)
+>```
 
 Прописываем код для теста:
 ```sh
