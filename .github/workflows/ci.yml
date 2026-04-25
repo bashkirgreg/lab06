@@ -1,69 +1,21 @@
 name: CI
 
-on:
-  push:
-    branches: [ main, master ]
-  pull_request:
-    branches: [ main, master ]
+on: [push, pull_request]
 
 jobs:
   build:
-    strategy:
-      matrix:
-        os: [ ubuntu-latest, windows-latest ]
-        compiler:
-          - cxx: g++
-            cc: gcc
-          - cxx: clang++
-            cc: clang
-        exclude:
-          - os: windows-latest
-            compiler:
-              cxx: g++
-              cc: gcc
-
-    runs-on: ${{ matrix.os }}
-
+    runs-on: ubuntu-latest
+    
     steps:
-      - uses: actions/checkout@v4
-
-      - name: CMake for Linux
-        if: runner.os == 'Linux'
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y cmake
-          
-      - name: Clang for Windows
-        if: runner.os == 'Windows'
-        run: |
-          choco install llvm -y
-          echo "C:\Program Files\LLVM\bin" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
-          
-      - name: CMake
-        shell: bash
-        run: |
-          cmake -B build \
-            -G "Unix Makefiles" \
-            -DCMAKE_CXX_COMPILER=${{ matrix.compiler.cxx }} \
-            -DCMAKE_C_COMPILER=${{ matrix.compiler.cc }}
-            
-      - name: Build
-        run: cmake --build build
-
-      - name: Hello_world
-        shell: bash
-        run: |
-          if [ "${{ matrix.os }}" = "windows-latest" ]; then
-            ./build/hello_world/hello_world.exe
-          else
-            ./build/hello_world/hello_world
-          fi
-          
-      - name: Solver
-        shell: bash
-        run: |
-          if [ "${{ matrix.os }}" = "windows-latest" ]; then
-            echo "1 5 4" | ./build/solver/solver.exe
-          else
-            echo "1 5 4" | ./build/solver/solver
-          fi
+    - uses: actions/checkout@v4
+    
+    - name: Configure
+      run: cmake -B build -DBUILD_TESTS=ON
+    
+    - name: Build
+      run: cmake --build build
+    
+    - name: Test
+      run: |
+        cd build
+        ctest --output-on-failure

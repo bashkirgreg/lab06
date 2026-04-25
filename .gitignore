@@ -1,0 +1,9 @@
+build/
+_build/
+file.txt
+*.o
+*.a
+*.so
+*.exe
+.deps/
+*.swp
