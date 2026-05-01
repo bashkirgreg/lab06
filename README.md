@@ -15,10 +15,10 @@ $ source scripts/activate
 
 Клонируем данные из прошлой работы:
 ```sh
-$ git clone https://github.com/${GITHUB_USERNAME}/lab04 projects/lab05
-$ cd projects/lab05
+$ git clone https://github.com/${GITHUB_USERNAME}/lab04 projects/lab06
+$ cd projects/lab06
 $ git remote remove origin
-$ git remote add origin https://github.com/${GITHUB_USERNAME}/lab05
+$ git remote add origin https://github.com/${GITHUB_USERNAME}/lab06
 ```
 
 Добавляем фреймворк `Google Test (gtest)` в проект как подмодуль `Git`:
@@ -31,7 +31,7 @@ $ git commit -m"added gtest framework"
 ```
 После второй команды получаем:
 ```sh
-Cloning into '/home/user1/bashkirgreg/workspace/projects/lab05/third-party/gtest'...
+Cloning into '/home/user1/bashkirgreg/workspace/projects/lab06/third-party/gtest'...
 remote: Enumerating objects: 28627, done.
 remote: Counting objects: 100% (61/61), done.
 remote: Compressing objects: 100% (46/46), done.
@@ -188,7 +188,7 @@ This warning is for project developers.  Use -Wno-dev to suppress it.
 -- Found Threads: TRUE  
 -- Configuring done (0.7s)
 -- Generating done (0.0s)
--- Build files have been written to: /home/user1/bashkirgreg/workspace/projects/lab05/_build
+-- Build files have been written to: /home/user1/bashkirgreg/workspace/projects/lab06/_build
 ```
 После второй команды:
 ```sh
@@ -226,7 +226,7 @@ This warning is for project developers.  Use -Wno-dev to suppress it.
 И наконец после третьей команды:
 ```sh
 Running tests...
-Test project /home/user1/bashkirgreg/workspace/projects/lab05/_build
+Test project /home/user1/bashkirgreg/workspace/projects/lab06/_build
     Start 1: check
 1/1 Test #1: check ............................   Passed    0.00 sec
 
@@ -242,7 +242,7 @@ $ cmake --build _build --target test -- ARGS=--verbose
 ```
 После первой команды выдало:
 ```sh
-Running main() from /home/user1/bashkirgreg/workspace/projects/lab05/third-party/gtest/googletest/src/gtest_main.cc
+Running main() from /home/user1/bashkirgreg/workspace/projects/lab06/third-party/gtest/googletest/src/gtest_main.cc
 [==========] Running 1 test from 1 test case.
 [----------] Global test environment set-up.
 [----------] 1 test from Print
@@ -257,9 +257,9 @@ Running main() from /home/user1/bashkirgreg/workspace/projects/lab05/third-party
 После второй:
 ```sh
 Running tests...
-UpdateCTestConfiguration  from :/home/user1/bashkirgreg/workspace/projects/lab05/_build/DartConfiguration.tcl
-UpdateCTestConfiguration  from :/home/user1/bashkirgreg/workspace/projects/lab05/_build/DartConfiguration.tcl
-Test project /home/user1/bashkirgreg/workspace/projects/lab05/_build
+UpdateCTestConfiguration  from :/home/user1/bashkirgreg/workspace/projects/lab06/_build/DartConfiguration.tcl
+UpdateCTestConfiguration  from :/home/user1/bashkirgreg/workspace/projects/lab06/_build/DartConfiguration.tcl
+Test project /home/user1/bashkirgreg/workspace/projects/lab06/_build
 Constructing a list of tests
 Done constructing a list of tests
 Updating test list for fixtures
@@ -269,10 +269,10 @@ Checking test dependency graph end
 test 1
     Start 1: check
 
-1: Test command: /home/user1/bashkirgreg/workspace/projects/lab05/_build/check
-1: Working Directory: /home/user1/bashkirgreg/workspace/projects/lab05/_build
+1: Test command: /home/user1/bashkirgreg/workspace/projects/lab06/_build/check
+1: Working Directory: /home/user1/bashkirgreg/workspace/projects/lab06/_build
 1: Test timeout computed to be: 10000000
-1: Running main() from /home/user1/bashkirgreg/workspace/projects/lab05/third-party/gtest/googletest/src/gtest_main.cc
+1: Running main() from /home/user1/bashkirgreg/workspace/projects/lab06/third-party/gtest/googletest/src/gtest_main.cc
 1: [==========] Running 1 test from 1 test case.
 1: [----------] Global test environment set-up.
 1: [----------] 1 test from Print
@@ -362,7 +362,7 @@ EOF
 -- Found Threads: TRUE  
 -- Configuring done (6.3s)
 -- Generating done (0.0s)
--- Build files have been written to: /home/user1/bashkirgreg/workspace/projects/lab05/build
+-- Build files have been written to: /home/user1/bashkirgreg/workspace/projects/lab06/build
 ```
 Вскоре делаем `cmake --build build`, получая:
 ```sh
@@ -387,7 +387,7 @@ EOF
 ```
 И наконец проверяем всё через `cd build && ctest --output-on-failure && cd ..`:
 ```sh
-Test project /home/user1/bashkirgreg/workspace/projects/lab05/build
+Test project /home/user1/bashkirgreg/workspace/projects/lab06/build
     Start 1: check
 1/1 Test #1: check ............................   Passed    0.01 sec
 
