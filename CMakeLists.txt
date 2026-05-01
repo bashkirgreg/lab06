@@ -29,4 +29,12 @@ if(BUILD_TESTS)
   target_include_directories(check PRIVATE include)
   add_test(NAME check COMMAND check)
 endif()
+
+add_subdirectory(formatter_lib)
+add_subdirectory(formatter_ex_lib)
+add_subdirectory(solver)
+
+install(TARGETS solver RUNTIME DESTINATION bin)
+install(TARGETS print ARCHIVE DESTINATION lib)
+
 include(CPackConfig.cmake)
