@@ -277,3 +277,206 @@ artifacts
 - архивы с файлами исходного кода (`.tar.gz`, `.zip`)
 - пакеты с бинарным файлом _solver_ (`.deb`, `.rpm`, `.msi`, `.dmg`)
 
+
+Для начала добавляем несколько строк в конце общего `CMakeLists.txt` , чтобы `solver` работал нормально:
+```sh
+add_subdirectory(formatter_lib)
+add_subdirectory(formatter_ex_lib)
+add_subdirectory(solver)
+
+install(TARGETS solver RUNTIME DESTINATION bin)
+install(TARGETS print ARCHIVE DESTINATION lib)
+
+include(CPackConfig.cmake)
+```
+
+Потом полностью переделываем `CPackConfig.cmake`:
+```sh
+include(InstallRequiredSystemLibraries)
+
+set(CPACK_PACKAGE_CONTACT "${GITHUB_EMAIL}")
+set(CPACK_DEBIAN_PACKAGE_MAINTAINER "${GITHUB_USERNAME} <${GITHUB_EMAIL}>")
+
+set(CPACK_PACKAGE_VERSION_MAJOR 0)
+set(CPACK_PACKAGE_VERSION_MINOR 1)
+set(CPACK_PACKAGE_VERSION_PATCH 0)
+set(CPACK_PACKAGE_VERSION_TWEAK 0)
+set(CPACK_PACKAGE_VERSION "0.1.0.0")
+
+set(CPACK_PACKAGE_DESCRIPTION_SUMMARY "Solver app")
+set(CPACK_PACKAGE_DESCRIPTION_FILE "${CMAKE_CURRENT_SOURCE_DIR}/DESCRIPTION")
+
+set(CPACK_RESOURCE_FILE_LICENSE "${CMAKE_CURRENT_SOURCE_DIR}/LICENSE")
+set(CPACK_RESOURCE_FILE_README "${CMAKE_CURRENT_SOURCE_DIR}/README.md")
+
+set(CPACK_PACKAGE_NAME "solver")
+
+set(CPACK_DEBIAN_PACKAGE_NAME "solver")
+set(CPACK_DEBIAN_PACKAGE_DEPENDS "libc6, libstdc++6")
+set(CPACK_DEBIAN_PACKAGE_RELEASE 1)
+
+set(CPACK_RPM_PACKAGE_NAME "solver")
+set(CPACK_RPM_PACKAGE_LICENSE "MIT")
+set(CPACK_RPM_PACKAGE_RELEASE 1)
+
+include(CPack)
+```
+
+Переписываем файл `DESCRIPTION`:
+```sh
+Solver application for mathematical problems.
+```
+
+Дополняем `.gitignore`:
+```sh
+build/
+_build/
+file.txt
+*.o
+*.a
+*.so
+*.exe
+.deps/
+*.swp
+
+artifacts/
+*.tar.gz
+*.deb
+*.rpm
+*.zip
+*.msi
+*.dmg
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+Thumbs.db
+```
+
+Теперь нужно обновить `.github/workflows/ci.yml`:
+```sh
+name: CI
+
+on:
+  push:
+    branches: [ master, main ]
+    tags: [ 'v*' ]
+  pull_request:
+    branches: [ master, main ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
+    
+    - name: Configure CMake
+      run: cmake -H. -B_build -DCMAKE_BUILD_TYPE=Release
+    
+    - name: Build
+      run: cmake --build _build
+    
+    - name: Package
+      run: |
+        cd _build
+        cpack -G "TGZ"
+        cpack -G "DEB"
+        cd ..
+    
+    - name: Upload artifacts
+      uses: actions/upload-artifact@v4
+      with:
+        name: packages
+        path: |
+          _build/*.tar.gz
+          _build/*.deb
+```
+
+Отправляем все наши видоизменённые файлы в репозиторий на `GitHub`:
+```sh
+git add .
+git commit -m "Add files from HomeWork"
+git push origin main
+```
+
+Создаём и отправляем тег для релиза
+```sh
+git tag v1.0.0.0 -m "Release v1.0.0.0"
+git push origin main --tags
+```
+
+Теперь очищаем `rm -rf _build artifacts` и осуществляем сборку вместе с созданием архивов. 
+
+Сначала `cmake -H. -B_build -DCMAKE_BUILD_TYPE=Release`, которая выдаёт:
+```sh
+-- The C compiler identification is GNU 13.3.0
+-- The CXX compiler identification is GNU 13.3.0
+-- Detecting C compiler ABI info
+-- Detecting C compiler ABI info - done
+-- Check for working C compiler: /usr/bin/cc - skipped
+-- Detecting C compile features
+-- Detecting C compile features - done
+-- Detecting CXX compiler ABI info
+-- Detecting CXX compiler ABI info - done
+-- Check for working CXX compiler: /usr/bin/c++ - skipped
+-- Detecting CXX compile features
+-- Detecting CXX compile features - done
+-- Configuring done (0.5s)
+-- Generating done (0.0s)
+-- Build files have been written to: /home/user1/bashkirgreg/workspace/projects/lab06/_build
+```
+
+Потом прописываем `cmake --build _build`, получая:
+```sh
+[ 10%] Building CXX object CMakeFiles/print.dir/sources/print.cpp.o
+[ 20%] Linking CXX static library libprint.a
+[ 20%] Built target print
+[ 30%] Building CXX object formatter_lib/CMakeFiles/formatter.dir/formatter.cpp.o
+[ 40%] Linking CXX static library libformatter.a
+[ 40%] Built target formatter
+[ 50%] Building CXX object formatter_ex_lib/CMakeFiles/formatter_ex.dir/formatter_ex.cpp.o
+[ 60%] Linking CXX static library libformatter_ex.a
+[ 60%] Built target formatter_ex
+[ 70%] Building CXX object solver/solver_lib/CMakeFiles/solver_lib.dir/solver.cpp.o
+[ 80%] Linking CXX static library libsolver_lib.a
+[ 80%] Built target solver_lib
+[ 90%] Building CXX object solver/CMakeFiles/solver.dir/equation.cpp.o
+[100%] Linking CXX executable solver
+[100%] Built target solver
+```
+
+Перемещаемся `cd _build` и пишем `cpack -G "TGZ"`:
+```sh
+CPack: Create package using TGZ
+CPack: Install projects
+CPack: - Run preinstall target for: print
+CPack: - Install project: print []
+CPack: Create package
+CPack: - package: /home/user1/bashkirgreg/workspace/projects/lab06/_build/solver-0.1.0.0-Linux.tar.gz generated.
+```
+
+А после `cpack -G "DEB"`:
+```sh
+CPack: Create package using DEB
+CPack: Install projects
+CPack: - Run preinstall target for: print
+CPack: - Install project: print []
+CPack: Create package
+CPack: - package: /home/user1/bashkirgreg/workspace/projects/lab06/_build/solver-0.1.0.0-Linux.deb generated.
+```
+
+Создаём `mkdir artifacts`, поскольку ранее мы её удалили, а затем перемещаем туда наши архивы через `mv _build/*.tar.gz _build/*.deb artifacts/ 2>/dev/null`. Проверяем содержимое через `tree artifacts`:
+```sh
+artifacts
+├── solver-0.1.0.0-Linux.deb
+└── solver-0.1.0.0-Linux.tar.gz
+
+1 directory, 2 files
+```
+
+Теперь публикуем `Release` по нашему тэгу, загружая файлы из папки `artifacts`. Наконец проверяем `GitHub Actions` на корректность работы, по пути исправляя появившиеся ошибки.
