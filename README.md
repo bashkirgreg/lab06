@@ -16,7 +16,7 @@ $ alias edit=<nano|vi|vim|subl>
 $ alias gsed=sed # for *-nix system
 ```
 
-Перемещаемся в рабочую директорию:
+Перемещаемся в нашу рабочую директорию:
 ```sh
 $ cd ${GITHUB_USERNAME}/workspace
 $ pushd .
@@ -76,7 +76,7 @@ index 164d4b4..27b18e3 100644
  set(CMAKE_CXX_STANDARD_REQUIRED ON)
 ```
 
-Теперь создаём файлы `DESCRIPTION` и `ChangeLog.md` с записью о релизе `0.1.0.0`, используя текущую дату и наши данные,чтобы можно было собрать `RPM` пакет:
+Теперь создаём файлы `DESCRIPTION` и `ChangeLog.md` с записью о релизе `0.1.0.0`, используя текущую дату и наши данные, чтобы можно было собрать `RPM` пакет:
 ```sh
 $ touch DESCRIPTION && edit DESCRIPTION
 $ touch ChangeLog.md
@@ -156,7 +156,7 @@ $ git tag v0.1.0.0
 git push origin main --tags
 ```
 
-Создаём файл для `GitHyb Actions`, а потом отправляем его на удалённый репозиторий через стандартные команды `Git`. Также незабываем создать файл `LICENSE`, который также отправляем на удалённый репозиторий:
+Создаём файл для `GitHub Actions`, а потом отправляем его на удалённый репозиторий через стандартные команды `Git`. Также незабываем создать файл `LICENSE`, который также отправляем на удалённый репозиторий:
 ```sh
 name: CI
 
@@ -412,7 +412,7 @@ git push origin main --tags
 
 Теперь очищаем `rm -rf _build artifacts` и осуществляем сборку вместе с созданием архивов. 
 
-Сначала `cmake -H. -B_build -DCMAKE_BUILD_TYPE=Release`, которая выдаёт:
+Сначала, в качестве эксперимента, вводим `cmake -H. -B_build -DCMAKE_BUILD_TYPE=Release`, которая выдаёт:
 ```sh
 -- The C compiler identification is GNU 13.3.0
 -- The CXX compiler identification is GNU 13.3.0
@@ -470,7 +470,7 @@ CPack: Create package
 CPack: - package: /home/user1/bashkirgreg/workspace/projects/lab06/_build/solver-0.1.0.0-Linux.deb generated.
 ```
 
-Создаём `mkdir artifacts`, поскольку ранее мы её удалили, а затем перемещаем туда наши архивы через `mv _build/*.tar.gz _build/*.deb artifacts/ 2>/dev/null`. Проверяем содержимое через `tree artifacts`:
+Создаём `mkdir artifacts`, поскольку ранее мы её удалили, а затем перемещаем туда наши архивы через `mv _build/*.tar.gz _build/*.deb artifacts`. Проверяем содержимое через `tree artifacts`:
 ```sh
 artifacts
 ├── solver-0.1.0.0-Linux.deb
