@@ -29,15 +29,9 @@ jobs:
       run: sudo apt-get update && sudo apt-get install -y rpm
       shell: bash
     
-    - name: Setup .NET (Windows)
-      if: matrix.os == 'windows-latest'
-      uses: actions/setup-dotnet@v4
-      with:
-        dotnet-version: '8.x'
-    
     - name: Install WIX (Windows)
       if: matrix.os == 'windows-latest'
-      run: dotnet tool install --global wix --version 3.14.0
+      run: choco install wixtoolset --version=3.14.0 -y
       shell: bash
     
     - name: Configure CMake
