@@ -24,6 +24,11 @@ jobs:
     steps:
     - uses: actions/checkout@v4
     
+    - name: Install NSIS (Windows)
+      if: matrix.os == 'windows-latest'
+      run: choco install nsis --no-progress -y
+      shell: bash
+    
     - name: Install RPM tools (Ubuntu)
       if: matrix.os == 'ubuntu-latest'
       run: sudo apt-get update && sudo apt-get install -y rpm
@@ -69,6 +74,7 @@ jobs:
           _build/*.deb
           _build/*.rpm
           _build/*.dmg
+          _build/*.exe
           _build/*.msi
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
