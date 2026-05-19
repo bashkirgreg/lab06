@@ -26,11 +26,6 @@ jobs:
       if: matrix.os == 'macos-latest'
       run: brew install cmake
 
-    - name: Install WIX (Windows)
-      if: matrix.os == 'windows-latest'
-      run: choco install wixtoolset --version=3.14.0 -y
-      shell: powershell
-
     - name: Configure
       run: cmake -S . -B _build -DCMAKE_BUILD_TYPE=Release
       shell: bash
@@ -45,6 +40,17 @@ jobs:
         cpack -C Release
         ls -la
       shell: bash
+
+    - name: Show WIX log
+      if: matrix.os == 'windows-latest'
+      run: |
+        if (Test-Path "D:/a/lab06/lab06/_build/_CPack_Packages/win64/WIX/wix.log") {
+          Write-Host "=== WIX LOG ==="
+          Get-Content "D:/a/lab06/lab06/_build/_CPack_Packages/win64/WIX/wix.log"
+        } else {
+          Write-Host "WIX log not found"
+        }
+      shell: pwsh
 
     - name: Upload to Release
       uses: softprops/action-gh-release@v1
