@@ -2,64 +2,79 @@ name: CI
 
 on:
   push:
-    tags: [ 'v*' ]
+    tags: [ "v*" ]
   workflow_dispatch:
 
 permissions:
   contents: write
 
 jobs:
-  build:
+  create-binary-packages:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
         os: [ubuntu-latest, macos-latest, windows-latest]
-    
+
     steps:
-    - uses: actions/checkout@v4
-
-    - name: Install dependencies (Ubuntu)
-      if: matrix.os == 'ubuntu-latest'
-      run: sudo apt-get update && sudo apt-get install -y cmake build-essential rpm
-
-    - name: Install dependencies (macOS)
-      if: matrix.os == 'macos-latest'
-      run: brew install cmake
-
-    - name: Configure
-      run: cmake -S . -B _build -DCMAKE_BUILD_TYPE=Release
-      shell: bash
-
-    - name: Build
-      run: cmake --build _build --config Release
-      shell: bash
-
-    - name: Package
-      run: |
-        cd _build
-        cpack -C Release
-        ls -la
-      shell: bash
-
-    - name: Show WIX log
-      if: matrix.os == 'windows-latest'
-      run: |
-        if (Test-Path "D:/a/lab06/lab06/_build/_CPack_Packages/win64/WIX/wix.log") {
-          Write-Host "=== WIX LOG ==="
-          Get-Content "D:/a/lab06/lab06/_build/_CPack_Packages/win64/WIX/wix.log"
-        } else {
-          Write-Host "WIX log not found"
-        }
-      shell: pwsh
-
-    - name: Upload to Release
-      uses: softprops/action-gh-release@v1
-      if: startsWith(github.ref, 'refs/tags/')
-      with:
-        files: |
-          _build/*.deb
-          _build/*.rpm
-          _build/*.dmg
-          _build/*.msi
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Get repo files
+        uses: actions/checkout@v4
+      
+      - name: Install required dependencies Ubuntu
+        if: matrix.os == 'ubuntu-latest'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y rpm
+      
+      - name: Set up DotNet Windows
+        if: matrix.os == 'windows-latest'
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '8.x'
+      
+      - name: Install WIX Windows
+        if: matrix.os == 'windows-latest'
+        run: |
+          dotnet tool install --global wix --version 4.0.0
+          wix extension add --global WixToolset.UI.wixext/4.0.4
+        shell: bash
+      
+      - name: Configure build directory
+        run: cmake -B build -DCMAKE_BUILD_TYPE=Release
+        shell: bash
+      
+      - name: Build project
+        run: cmake --build build --config Release
+        shell: bash
+      
+      - name: Create packages DEB RPM
+        if: matrix.os == 'ubuntu-latest'
+        run: |
+          cd build
+          cpack -G DEB -C Release
+          cpack -G RPM -C Release
+        shell: bash
+      
+      - name: Create packages DMG
+        if: matrix.os == 'macos-latest'
+        run: |
+          cd build
+          cpack -G DragNDrop -C Release
+        shell: bash
+      
+      - name: Create packages MSI
+        if: matrix.os == 'windows-latest'
+        run: |
+          cd build
+          cpack -G WIX -C Release
+        shell: bash
+      
+      - name: Upload binary packages
+        uses: softprops/action-gh-release@v1
+        with:
+          files: |
+            build/*.deb
+            build/*.rpm
+            build/*.dmg
+            build/*.msi
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
