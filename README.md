@@ -294,8 +294,8 @@ include(CPackConfig.cmake)
 ```sh
 include(InstallRequiredSystemLibraries)
 
-set(CPACK_PACKAGE_CONTACT "${GITHUB_EMAIL}")
-set(CPACK_DEBIAN_PACKAGE_MAINTAINER "${GITHUB_USERNAME} <${GITHUB_EMAIL}>")
+set(CPACK_PACKAGE_CONTACT "student@example.com")
+set(CPACK_DEBIAN_PACKAGE_MAINTAINER "student <student@example.com>")
 
 set(CPACK_PACKAGE_VERSION_MAJOR 0)
 set(CPACK_PACKAGE_VERSION_MINOR 1)
@@ -303,21 +303,38 @@ set(CPACK_PACKAGE_VERSION_PATCH 0)
 set(CPACK_PACKAGE_VERSION_TWEAK 0)
 set(CPACK_PACKAGE_VERSION "0.1.0.0")
 
-set(CPACK_PACKAGE_DESCRIPTION_SUMMARY "Solver app")
-set(CPACK_PACKAGE_DESCRIPTION_FILE "${CMAKE_CURRENT_SOURCE_DIR}/DESCRIPTION")
+set(CPACK_PACKAGE_DESCRIPTION_SUMMARY "solver library")
 
-set(CPACK_RESOURCE_FILE_LICENSE "${CMAKE_CURRENT_SOURCE_DIR}/LICENSE")
-set(CPACK_RESOURCE_FILE_README "${CMAKE_CURRENT_SOURCE_DIR}/README.md")
-
-set(CPACK_PACKAGE_NAME "solver")
-
-set(CPACK_DEBIAN_PACKAGE_NAME "solver")
-set(CPACK_DEBIAN_PACKAGE_DEPENDS "libc6, libstdc++6")
-set(CPACK_DEBIAN_PACKAGE_RELEASE 1)
+set(CPACK_RESOURCE_FILE_LICENSE ${CMAKE_SOURCE_DIR}/LICENSE)
+set(CPACK_RESOURCE_FILE_README ${CMAKE_SOURCE_DIR}/README.md)
 
 set(CPACK_RPM_PACKAGE_NAME "solver")
 set(CPACK_RPM_PACKAGE_LICENSE "MIT")
+set(CPACK_RPM_PACKAGE_GROUP "solver")
 set(CPACK_RPM_PACKAGE_RELEASE 1)
+set(CPACK_RPM_PACKAGE_ARCHITECTURE "x86_64")
+
+set(CPACK_DEBIAN_PACKAGE_NAME "solver")
+set(CPACK_DEBIAN_PACKAGE_PREDEPENDS "cmake >= 3.0")
+set(CPACK_DEBIAN_PACKAGE_RELEASE 1)
+
+set(CPACK_PACKAGE_NAME "solver")
+
+if(WIN32)
+    set(CPACK_GENERATOR "WIX")
+    set(CPACK_WIX_ARCHITECTURE "x64")
+    set(CPACK_WIX_PRODUCT_GUID "3a7b8c2d-1e4f-5a6b-7c8d-9e0f1a2b3c4d")
+    set(CPACK_WIX_LICENSE_RTF "${CMAKE_SOURCE_DIR}/LICENSE.rtf")
+    set(CPACK_WIX_PROGRAM_MENU_FOLDER "solver")
+    set(CPACK_WIX_VERSION "4")
+    set(CPACK_WIX_PROPERTY_ARPCONTACT "student@example.com")
+elseif(APPLE)
+    set(CPACK_GENERATOR "DragNDrop")
+    set(CPACK_DMG_VOLUME_NAME "solver")
+    set(CPACK_DMG_FORMAT "UDBZ")
+else()
+    set(CPACK_GENERATOR "DEB;RPM;TGZ;ZIP")
+endif()
 
 include(CPack)
 ```
@@ -361,124 +378,86 @@ name: CI
 
 on:
   push:
-    branches: [ master, main ]
-    tags: [ 'v*' ]
-  pull_request:
-    branches: [ master, main ]
+    tags: [ "v*" ]
+  workflow_dispatch:
+
+permissions:
+  contents: write
 
 jobs:
-  build:
-    runs-on: ubuntu-latest
-    
+  create-binary-packages:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
+
     steps:
-    - uses: actions/checkout@v4
-      with:
-        fetch-depth: 0
-    
-    - name: Configure CMake
-      run: cmake -H. -B_build -DCMAKE_BUILD_TYPE=Release
-    
-    - name: Build
-      run: cmake --build _build
-    
-    - name: Package
-      run: |
-        cd _build
-        cpack -G "TGZ"
-        cpack -G "DEB"
-        cd ..
-    
-    - name: Upload artifacts
-      uses: actions/upload-artifact@v4
-      with:
-        name: packages
-        path: |
-          _build/*.tar.gz
-          _build/*.deb
+      - name: Get repo files
+        uses: actions/checkout@v4
+      
+      - name: Install dependencies (Ubuntu)
+        if: matrix.os == 'ubuntu-latest'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y rpm
+      
+      - name: Setup .NET (Windows)
+        if: matrix.os == 'windows-latest'
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '8.x'
+      
+      - name: Install WIX (Windows)
+        if: matrix.os == 'windows-latest'
+        run: |
+          dotnet tool install --global wix --version 4.0.0
+          wix extension add --global WixToolset.UI.wixext/4.0.4
+        shell: bash
+      
+      - name: Configure
+        run: cmake -B build -DCMAKE_BUILD_TYPE=Release
+        shell: bash
+      
+      - name: Build
+        run: cmake --build build --config Release
+        shell: bash
+      
+      - name: Create DEB and RPM (Ubuntu)
+        if: matrix.os == 'ubuntu-latest'
+        run: |
+          cd build
+          cpack -G DEB -C Release
+          cpack -G RPM -C Release
+        shell: bash
+      
+      - name: Create DMG (macOS)
+        if: matrix.os == 'macos-latest'
+        run: |
+          cd build
+          cpack -G DragNDrop -C Release
+        shell: bash
+      
+      - name: Create MSI (Windows)
+        if: matrix.os == 'windows-latest'
+        run: |
+          cd build
+          cpack -G WIX -C Release
+        shell: bash
+      
+      - name: Upload to Release
+        uses: softprops/action-gh-release@v1
+        with:
+          files: |
+            build/*.deb
+            build/*.rpm
+            build/*.dmg
+            build/*.msi
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 ```
 
-Отправляем все наши видоизменённые файлы в репозиторий на `GitHub`:
-```sh
-git add .
-git commit -m "Add files from HomeWork"
-git push origin main
-```
+Создаём специальный `LICENSE.rtf` для `MSI`, исправляем другие мелкие ошибки, а потом публикуем всё на `GitHub` через стандартные команды `Git`, проверяя вкладку `GitHub Actions` и `Releases`.
 
-Создаём и отправляем тег для релиза
-```sh
-git tag v1.0.0.0 -m "Release v1.0.0.0"
-git push origin main --tags
-```
+>Заранее приношу извинения за столько тэгов и релизов, уж очень `MSI` решил меня порадовать...
 
-Теперь очищаем `rm -rf _build artifacts` и осуществляем сборку вместе с созданием архивов. 
 
-Сначала, в качестве эксперимента, вводим `cmake -H. -B_build -DCMAKE_BUILD_TYPE=Release`, которая выдаёт:
-```sh
--- The C compiler identification is GNU 13.3.0
--- The CXX compiler identification is GNU 13.3.0
--- Detecting C compiler ABI info
--- Detecting C compiler ABI info - done
--- Check for working C compiler: /usr/bin/cc - skipped
--- Detecting C compile features
--- Detecting C compile features - done
--- Detecting CXX compiler ABI info
--- Detecting CXX compiler ABI info - done
--- Check for working CXX compiler: /usr/bin/c++ - skipped
--- Detecting CXX compile features
--- Detecting CXX compile features - done
--- Configuring done (0.5s)
--- Generating done (0.0s)
--- Build files have been written to: /home/user1/bashkirgreg/workspace/projects/lab06/_build
-```
-
-Потом прописываем `cmake --build _build`, получая:
-```sh
-[ 10%] Building CXX object CMakeFiles/print.dir/sources/print.cpp.o
-[ 20%] Linking CXX static library libprint.a
-[ 20%] Built target print
-[ 30%] Building CXX object formatter_lib/CMakeFiles/formatter.dir/formatter.cpp.o
-[ 40%] Linking CXX static library libformatter.a
-[ 40%] Built target formatter
-[ 50%] Building CXX object formatter_ex_lib/CMakeFiles/formatter_ex.dir/formatter_ex.cpp.o
-[ 60%] Linking CXX static library libformatter_ex.a
-[ 60%] Built target formatter_ex
-[ 70%] Building CXX object solver/solver_lib/CMakeFiles/solver_lib.dir/solver.cpp.o
-[ 80%] Linking CXX static library libsolver_lib.a
-[ 80%] Built target solver_lib
-[ 90%] Building CXX object solver/CMakeFiles/solver.dir/equation.cpp.o
-[100%] Linking CXX executable solver
-[100%] Built target solver
-```
-
-Перемещаемся `cd _build` и пишем `cpack -G "TGZ"`:
-```sh
-CPack: Create package using TGZ
-CPack: Install projects
-CPack: - Run preinstall target for: print
-CPack: - Install project: print []
-CPack: Create package
-CPack: - package: /home/user1/bashkirgreg/workspace/projects/lab06/_build/solver-0.1.0.0-Linux.tar.gz generated.
-```
-
-А после `cpack -G "DEB"`:
-```sh
-CPack: Create package using DEB
-CPack: Install projects
-CPack: - Run preinstall target for: print
-CPack: - Install project: print []
-CPack: Create package
-CPack: - package: /home/user1/bashkirgreg/workspace/projects/lab06/_build/solver-0.1.0.0-Linux.deb generated.
-```
-
-Создаём `mkdir artifacts`, поскольку ранее мы её удалили, а затем перемещаем туда наши архивы через `mv _build/*.tar.gz _build/*.deb artifacts`. Проверяем содержимое через `tree artifacts`:
-```sh
-artifacts
-├── solver-0.1.0.0-Linux.deb
-└── solver-0.1.0.0-Linux.tar.gz
-
-1 directory, 2 files
-```
-
-Теперь публикуем `Release` по нашему тэгу, загружая файлы из папки `artifacts`. Наконец проверяем `GitHub Actions` на корректность работы, по пути исправляя появившиеся ошибки.
-
->Для красоты решил удалить лишнюю папку `artifacts` с ненужной для этой работы фотографией. Другие файлы уже побоялся удалять...
