@@ -19,34 +19,34 @@ jobs:
       - name: Get repo files
         uses: actions/checkout@v4
       
-      - name: Install required dependencies Ubuntu
+      - name: Install dependencies (Ubuntu)
         if: matrix.os == 'ubuntu-latest'
         run: |
           sudo apt-get update
           sudo apt-get install -y rpm
       
-      - name: Set up DotNet Windows
+      - name: Setup .NET (Windows)
         if: matrix.os == 'windows-latest'
         uses: actions/setup-dotnet@v4
         with:
           dotnet-version: '8.x'
       
-      - name: Install WIX Windows
+      - name: Install WIX (Windows)
         if: matrix.os == 'windows-latest'
         run: |
           dotnet tool install --global wix --version 4.0.0
           wix extension add --global WixToolset.UI.wixext/4.0.4
         shell: bash
       
-      - name: Configure build directory
+      - name: Configure
         run: cmake -B build -DCMAKE_BUILD_TYPE=Release
         shell: bash
       
-      - name: Build project
+      - name: Build
         run: cmake --build build --config Release
         shell: bash
       
-      - name: Create packages DEB RPM
+      - name: Create DEB and RPM (Ubuntu)
         if: matrix.os == 'ubuntu-latest'
         run: |
           cd build
@@ -54,46 +54,21 @@ jobs:
           cpack -G RPM -C Release
         shell: bash
       
-      - name: Create packages DMG
+      - name: Create DMG (macOS)
         if: matrix.os == 'macos-latest'
         run: |
           cd build
           cpack -G DragNDrop -C Release
         shell: bash
       
-      - name: Create packages MSI
+      - name: Create MSI (Windows)
         if: matrix.os == 'windows-latest'
-        id: msi
-        continue-on-error: true
         run: |
           cd build
           cpack -G WIX -C Release
         shell: bash
       
-      - name: Show WIX log
-        if: matrix.os == 'windows-latest' && always()
-        run: |
-          Write-Host "=== Looking for WIX log ==="
-          $logPath = "D:/a/lab06/lab06/build/_CPack_Packages/win64/WIX/wix.log"
-          if (Test-Path $logPath) {
-            Write-Host "=== WIX LOG FOUND ==="
-            Get-Content $logPath
-          } else {
-            Write-Host "WIX log not found at: $logPath"
-            Write-Host "Searching for any .log files in build directory..."
-            Get-ChildItem -Path "D:/a/lab06/lab06/build" -Recurse -Filter "*.log" | ForEach-Object {
-              Write-Host "=== Found log: $($_.FullName) ==="
-              Get-Content $_.FullName
-            }
-          }
-        shell: pwsh
-      
-      - name: Fail if MSI failed
-        if: matrix.os == 'windows-latest' && steps.msi.outcome == 'failure'
-        run: exit 1
-        shell: bash
-      
-      - name: Upload binary packages
+      - name: Upload to Release
         uses: softprops/action-gh-release@v1
         with:
           files: |
