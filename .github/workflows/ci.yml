@@ -68,6 +68,22 @@ jobs:
           cpack -G WIX -C Release
         shell: bash
       
+      - name: Show WIX log
+        if: matrix.os == 'windows-latest'
+        run: |
+          $logPath = "D:/a/lab06/lab06/build/_CPack_Packages/win64/WIX/wix.log"
+          if (Test-Path $logPath) {
+            Write-Host "=== WIX LOG ==="
+            Get-Content $logPath
+          } else {
+            Write-Host "WIX log not found at: $logPath"
+            Get-ChildItem -Path "D:/a/lab06/lab06/build" -Recurse -Filter "*.log" | ForEach-Object {
+              Write-Host "=== Found log: $($_.FullName) ==="
+              Get-Content $_.FullName
+            }
+          }
+        shell: pwsh
+      
       - name: Upload binary packages
         uses: softprops/action-gh-release@v1
         with:
