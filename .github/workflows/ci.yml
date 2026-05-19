@@ -27,6 +27,7 @@ jobs:
     - name: Install RPM tools (Ubuntu)
       if: matrix.os == 'ubuntu-latest'
       run: sudo apt-get update && sudo apt-get install -y rpm
+      shell: bash
     
     - name: Setup .NET (Windows)
       if: matrix.os == 'windows-latest'
@@ -39,12 +40,15 @@ jobs:
       run: |
         dotnet tool install --global wix --version 4.0.0
         wix extension add --global WixToolset.UI.wixext/4.0.4
+      shell: bash
     
     - name: Configure CMake
-      run: cmake -H. -B_build -DCMAKE_BUILD_TYPE=Release
+      run: cmake -B_build -DCMAKE_BUILD_TYPE=Release
+      shell: bash
     
     - name: Build
       run: cmake --build _build --config Release
+      shell: bash
     
     - name: Create packages
       shell: bash
