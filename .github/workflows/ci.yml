@@ -37,9 +37,7 @@ jobs:
     
     - name: Install WIX (Windows)
       if: matrix.os == 'windows-latest'
-      run: |
-        dotnet tool install --global wix --version 4.0.0
-        wix extension add --global WixToolset.UI.wixext/4.0.4
+      run: dotnet tool install --global wix --version 3.14.0
       shell: bash
     
     - name: Configure CMake
