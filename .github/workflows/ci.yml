@@ -19,7 +19,7 @@ jobs:
           - os: macos-latest
             cpack_generators: "DragNDrop"
           - os: windows-latest
-            cpack_generators: "WIX"
+            cpack_generators: "NSIS"
     
     steps:
     - uses: actions/checkout@v4
