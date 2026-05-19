@@ -63,26 +63,35 @@ jobs:
       
       - name: Create packages MSI
         if: matrix.os == 'windows-latest'
+        id: msi
+        continue-on-error: true
         run: |
           cd build
           cpack -G WIX -C Release
         shell: bash
       
       - name: Show WIX log
-        if: matrix.os == 'windows-latest'
+        if: matrix.os == 'windows-latest' && always()
         run: |
+          Write-Host "=== Looking for WIX log ==="
           $logPath = "D:/a/lab06/lab06/build/_CPack_Packages/win64/WIX/wix.log"
           if (Test-Path $logPath) {
-            Write-Host "=== WIX LOG ==="
+            Write-Host "=== WIX LOG FOUND ==="
             Get-Content $logPath
           } else {
             Write-Host "WIX log not found at: $logPath"
+            Write-Host "Searching for any .log files in build directory..."
             Get-ChildItem -Path "D:/a/lab06/lab06/build" -Recurse -Filter "*.log" | ForEach-Object {
               Write-Host "=== Found log: $($_.FullName) ==="
               Get-Content $_.FullName
             }
           }
         shell: pwsh
+      
+      - name: Fail if MSI failed
+        if: matrix.os == 'windows-latest' && steps.msi.outcome == 'failure'
+        run: exit 1
+        shell: bash
       
       - name: Upload binary packages
         uses: softprops/action-gh-release@v1
