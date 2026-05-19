@@ -26,11 +26,6 @@ jobs:
       if: matrix.os == 'macos-latest'
       run: brew install cmake
 
-    - name: Install WIX (Windows)
-      if: matrix.os == 'windows-latest'
-      run: choco install wixtoolset --version=3.14.0 -y
-      shell: powershell
-
     - name: Configure
       run: cmake -S . -B _build -DCMAKE_BUILD_TYPE=Release
       shell: bash
