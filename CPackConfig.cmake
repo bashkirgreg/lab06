@@ -1,7 +1,7 @@
 include(InstallRequiredSystemLibraries)
 
-set(CPACK_PACKAGE_CONTACT "${GITHUB_EMAIL}")
-set(CPACK_DEBIAN_PACKAGE_MAINTAINER "${GITHUB_USERNAME} <${GITHUB_EMAIL}>")
+set(CPACK_PACKAGE_CONTACT "bashkirgreg@gmail.com")
+set(CPACK_DEBIAN_PACKAGE_MAINTAINER "bashkirgreg <bashkirgreg@gmail.com>")
 
 set(CPACK_PACKAGE_VERSION_MAJOR 0)
 set(CPACK_PACKAGE_VERSION_MINOR 1)
@@ -31,7 +31,7 @@ if(WIN32)
     set(CPACK_WIX_LICENSE_RTF "${CMAKE_SOURCE_DIR}/LICENSE.rtf")
     set(CPACK_WIX_PROGRAM_MENU_FOLDER "out")
     set(CPACK_WIX_VERSION "4")
-    set(CPACK_WIX_PROPERTY_ARPCONTACT "${GITHUB_EMAIL}")
+    set(CPACK_WIX_PROPERTY_ARPCONTACT "bashkirgreg@gmail.com")
 elseif(APPLE)
     set(CPACK_GENERATOR "DragNDrop")
     set(CPACK_DMG_VOLUME_NAME "solver")
