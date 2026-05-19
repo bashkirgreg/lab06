@@ -13,41 +13,39 @@ jobs:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        include:
-          - os: ubuntu-latest
-            cpack_generators: "DEB;RPM"
-          - os: macos-latest
-            cpack_generators: "DragNDrop"
-          - os: windows-latest
-            cpack_generators: "WIX"
+        os: [ubuntu-latest, macos-latest, windows-latest]
     
     steps:
     - uses: actions/checkout@v4
-    
-    - name: Install RPM tools (Ubuntu)
+
+    - name: Install dependencies (Ubuntu)
       if: matrix.os == 'ubuntu-latest'
-      run: sudo apt-get update && sudo apt-get install -y rpm
+      run: sudo apt-get update && sudo apt-get install -y cmake build-essential rpm
+
+    - name: Install dependencies (macOS)
+      if: matrix.os == 'macos-latest'
+      run: brew install cmake
+
+    - name: Install WIX (Windows)
+      if: matrix.os == 'windows-latest'
+      run: choco install wixtoolset -y
+      shell: powershell
+
+    - name: Configure
+      run: cmake -S . -B _build -DCMAKE_BUILD_TYPE=Release
       shell: bash
-    
-    - name: Configure CMake
-      run: cmake -B_build -DCMAKE_BUILD_TYPE=Release
-      shell: bash
-    
+
     - name: Build
       run: cmake --build _build --config Release
       shell: bash
-    
-    - name: Create packages
-      shell: bash
+
+    - name: Package
       run: |
         cd _build
-        IFS=';' read -ra GENERATORS <<< "${{ matrix.cpack_generators }}"
-        for generator in "${GENERATORS[@]}"; do
-          echo "Creating package with generator: $generator"
-          cpack -G "$generator" -C Release
-        done
-        cd ..
-    
+        cpack -C Release
+        ls -la
+      shell: bash
+
     - name: Upload to Release
       uses: softprops/action-gh-release@v1
       if: startsWith(github.ref, 'refs/tags/')
